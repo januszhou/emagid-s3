@@ -1,0 +1,6 @@
+{
+    "name": "janus/emagid-s3",
+    "require": {
+        "aws/aws-sdk-php": "2.8"
+    }
+}
