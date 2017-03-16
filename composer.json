@@ -1,5 +1,5 @@
 {
-    "name": "janus/emagid-s3",
+    "name": "januszhou/emagid-s3",
     "minimum-stability": "stable",
     "require": {
         "php": ">=5.3.3",
