@@ -2,5 +2,10 @@
     "name": "janus/emagid-s3",
     "require": {
         "aws/aws-sdk-php": "2.8"
+    },
+    "autoload": {
+        "psr-0": {
+            "EmagidService": "/"
+        }
     }
 }

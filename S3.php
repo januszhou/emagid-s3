@@ -5,7 +5,7 @@
  * Date: 3/16/17
  * Time: 11:00 AM
  */
-namespace emagidService;
+namespace EmagidService;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
