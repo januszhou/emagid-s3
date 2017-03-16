@@ -1,5 +1,6 @@
 {
     "name": "janus/emagid-s3",
+    "minimum-stability": "master",
     "require": {
         "php": ">=5.3.3",
         "aws/aws-sdk-php": "2.8"
