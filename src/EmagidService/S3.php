@@ -20,32 +20,61 @@ class S3{
      * You have to define ACCESS KEY and SECRET KEY as const
      * TODO: change it use environment variable or read from file which will only exists on server
      */
-    public function __construct()
+    public function __construct($opt = [])
     {
-        $this->s3 = S3Client::factory(['credentials' => ['key' => AWS_ACCESS_KEY_ID, 'secret' => AWS_SECRET_ACCESS_KEY]]);
-        $this->bucket = S3_BUCKET;
+        if(!isset($opt['key']) && !defined('AWS_ACCESS_KEY_ID')){
+            throw new \Exception('AWS ACCESS KEY is required');
+        }
+
+        if(!isset($opt['secret']) && !defined('AWS_SECRET_ACCESS_KEY')){
+            throw new \Exception('AWS SECRET KEY is required');
+        }
+
+        if(!isset($opt['bucket']) && !defined('S3_BUCKET')){
+            throw new \Exception('AWS bucket name is required');
+        }
+
+        $key = isset($opt['key'])?$opt['key']:AWS_ACCESS_KEY_ID;
+        $secret = isset($opt['secret'])?$opt['secret']:AWS_SECRET_ACCESS_KEY;
+        $bucket = isset($opt['bucket'])?$opt['bucket']:S3_BUCKET;
+
+        $this->s3 = S3Client::factory(['credentials' => ['key' => $key, 'secret' => $secret]]);
+        $this->bucket = $bucket;
     }
 
 
     /**
-     * $file has to be $_FILE[$file]
+     * $file either $_FILE[$file] or /path/to/file
      * @param $file
-     * @return bool
+     * @param null $fileName
+     * @return string | bool
      */
-    public function upload($file)
+    public function upload($file, $fileName = null)
     {
-        $key = uniqid() . "_" . basename($file['name']);
+        $openPath = is_array($file)?$file['tmp_name']:$file;
 
-        // replace (), - and space
-        $key = str_replace(' ', '_', $key);
-        $key = str_replace('-', '_', $key);
-        $key = str_replace('(', '_', $key);
-        $key = str_replace(')', '_', $key);
+        if(!$fileName && is_array($file)){
+            // $file is FILE and format filename
+            $key = uniqid() . "_" . basename($file['name']);
+
+            // replace (), - and space
+            $key = str_replace(' ', '_', $key);
+            $key = str_replace('-', '_', $key);
+            $key = str_replace('(', '_', $key);
+            $key = str_replace(')', '_', $key);
+        } elseif(!is_array($file) && !$fileName) {
+            // $file is STRING, take last part of /path/to/file
+            $path = explode('/', $file);
+            $key = $path[count($path) - 1];
+        } else {
+            $key = $fileName;
+        }
+
         try {
             $this->s3->putObject([
                 'Bucket' => $this->bucket,
                 'Key'    => $key,
-                'Body'   => fopen($file['tmp_name'], 'r'),
+                'Body'   => fopen($openPath, 'r'),
                 'ACL'    => 'public-read',
             ]);
 
@@ -56,6 +85,10 @@ class S3{
         }
     }
 
+    /**
+     * @param $key
+     * @return bool
+     */
     public function delete($key)
     {
         try {
@@ -81,11 +114,13 @@ class S3{
         return $this->s3->getObjectUrl($this->bucket, $key);
     }
 
-    public static function doesObjectExist($key, $bucket = S3_BUCKET)
+    /**
+     * @param $key
+     * @return bool
+     */
+    public function doesObjectExist($key)
     {
-        $s3 = S3Client::factory(['credentials' => ['key' => AWS_ACCESS_KEY_ID, 'secret' => AWS_SECRET_ACCESS_KEY]]);
-
-        return $s3->doesObjectExist($bucket, $key);
+        return $this->s3->doesObjectExist($this->bucket, $key);
     }
 
 
